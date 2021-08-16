@@ -1,0 +1,72 @@
+in---
+title: "Randomized tables"
+output: html_notebook
+---
+```{r}
+#This project requires 2 plugins, which can be installed with this code:
+install.packages("tidyverse")
+install.packages("randomNames")
+```
+
+```{r}
+#Loading libraries. 
+#The memory.limit function was required on the computer I used to increase the memory size so that large tables could be loaded. It may not be needed in all cases.
+library(tidyverse)
+library(randomNames)
+memory.limit(size=56000)
+```
+
+```{r}
+#Load HistoTrac tables.
+(Patient <- readRDS(file = "Patient.rds"))
+(PatientCase <- readRDS(file = "PatientCase.rds"))
+(RelatedPatient <- readRDS(file = "RelatedPatient.rds"))
+(TestDetail <- readRDS(file = "TestDetail.rds"))
+(Sample <- readRDS(file = "Sample.rds"))
+(Test <- readRDS(file = "Test.rds"))
+(UserTest <- readRDS(file = "UserTest.rds"))
+(TransplantHistory <- readRDS(file = "TransplantHistory.rds"))
+(Xmatch <- readRDS(file = "Xmatch.rds"))
+```
+
+```{r}
+#Randomize tables
+#For the randomNames function, you have to specify the number names that will be generated, which has to be equal to the number of rows in the table.
+#runif is a random number generator in base R. In addition to specifying the number of values (equal to the number of rows), you also have to specify the range of numbers for the random number. 
+(Randomized_Patient <- Patient 
+   %>% mutate(across(where(is.character), ~na_if(., ""))) 
+   %>% mutate(firstnm = case_when(!is.na(firstnm) ~ randomNames(113053, which.names="first"), TRUE ~ NA_character_))
+   %>% mutate(lastnm = case_when(!is.na(lastnm) ~ randomNames(113053, which.names="last"), TRUE ~ NA_character_))
+   %>% mutate(HospitalID = as.double(HospitalID))
+   %>% mutate(HospitalID = case_when(!is.na(HospitalID) ~ runif(113053, 000000000, 999999999)))
+   %>% mutate(HospitalID = as.integer(HospitalID))
+   %>% mutate(homephonenbr = as.double(homephonenbr))
+   %>% mutate(homephonenbr = case_when(!is.na(homephonenbr) ~ runif(113053, 0000000000, 9999999999)))
+   %>% mutate(homephonenbr = as.integer(homephonenbr))
+   %>% mutate(SSNbr = as.double(SSNbr))
+   %>% mutate(SSNbr = case_when(!is.na(SSNbr) ~ runif(113053, 00000000, 99999999)))
+   %>% mutate(SSNbr = as.integer(SSNbr))
+   %>% mutate(OtherIdNbr = as.double(OtherIdNbr))
+   %>% mutate(OtherIdNbr = case_when(!is.na(OtherIdNbr) ~ runif(113053, 00000000, 99999999)))
+   %>% mutate(OtherIdNbr = as.integer(OtherIdNbr))
+   )
+
+(Randomized_PatientCase <- PatientCase %>% select(CaseId: CaseNbr, ReportNotesTxt:NomenclatureUpgradeInd))
+
+#The "-" in front of the column deletes that column while preserving all other columns in the table.
+(Randomized_TestDetail <- TestDetail %>% select(-SingleAgInfoValueTxt))
+
+(Radomized_TransplantHistory <- TransplantHistory
+   %>% mutate(across(where(is.character), ~na_if(., ""))) 
+   %>% mutate(DonorNm = case_when(!is.na(DonorNm) ~ randomNames(29693), TRUE ~ NA_character_))
+   )
+```
+
+```{r}
+#Save the randomized tables.
+saveRDS(Randomized_Patient, file = "Randomized_Patient.rds")
+saveRDS(Randomized_PatientCase, file = "Randomized_PatientCase.rds")
+saveRDS(Randomized_TestDetail, file = "Randomized_TestDetail.rds")
+saveRDS(Radomized_TransplantHistory, file = "Radomized_TransplantHistory.rds")
+```
+
